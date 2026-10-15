@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Measuring Ruler & Analytics Blueprint Emblem (centered in 66dp safe zone) -->
+    <!-- Analytics Chart Bars -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M32,70 L32,54 C32,52.9 32.9,52 34,52 L40,52 C41.1,52 42,52.9 42,54 L42,70 C42,71.1 41.1,72 40,72 L34,72 C32.9,72 32,71.1 32,70 Z" />
+    <path
+        android:fillColor="#60A5FA"
+        android:pathData="M46,70 L46,44 C46,42.9 46.9,42 48,42 L54,42 C55.1,42 56,42.9 56,44 L56,70 C56,71.1 55.1,72 54,72 L48,72 C46.9,72 46,71.1 46,70 Z" />
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M60,70 L60,34 C60,32.9 60.9,32 62,32 L68,32 C69.1,32 70,32.9 70,34 L70,70 C70,71.1 69.1,72 68,72 L62,72 C60.9,72 60,71.1 60,70 Z" />
+    <!-- Horizontal Baseline Ruler -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,72 L78,72 C79.1,72 80,72.9 80,74 C80,75.1 79.1,76 78,76 L28,76 C26.9,76 26,75.1 26,74 C26,72.9 26.9,72 28,72 Z" />
+    <!-- Ruler hash marks -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M37,76 L37,80 C37,80.6 36.6,81 36,81 C35.4,81 35,80.6 35,80 L35,76 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M51,76 L51,81 C51,81.6 50.6,82 50,82 C49.4,82 49,81.6 49,81 L49,76 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M65,76 L65,80 C65,80.6 64.6,81 64,81 C63.4,81 63,80.6 63,80 L63,76 Z" />
+    <!-- Growth Trend Arrow Line -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,48 L48,38 L60,42 L73,28 L73,34 C73,34.6 73.4,35 74,35 C74.6,35 75,34.6 75,34 L75,25 C75,24.4 74.6,24 74,24 L65,24 C64.4,24 64,24.4 64,25 C64,25.6 64.4,26 65,26 L70.5,26 L59.5,38 L47.5,34 L32.5,45 C32.1,45.3 32,45.8 32.2,46.2 C32.4,46.6 32.8,46.9 33.3,46.9 Z" />
+</vector>

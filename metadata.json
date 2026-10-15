@@ -1,0 +1,6 @@
+{
+  "name": "MarketScope",
+  "description": "Comprehensive business suite for marketing visitor tracking, client measurements, estimate calculations, photo gallery, product catalog, and management settings.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

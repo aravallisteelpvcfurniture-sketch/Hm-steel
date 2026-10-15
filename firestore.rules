@@ -1,0 +1,154 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Entity validation helpers
+    function isValidVisitor(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             (!('company' in data) || (data.company is string && data.company.size() <= 200)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 50)) &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 150)) &&
+             (!('source' in data) || (data.source is string && data.source.size() <= 50)) &&
+             (!('interestLevel' in data) || (data.interestLevel is string && data.interestLevel.size() <= 50)) &&
+             (!('status' in data) || (data.status is string && data.status.size() <= 50)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000));
+    }
+
+    function isValidMeasurement(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.locationName is string && data.locationName.size() > 0 && data.locationName.size() <= 200 &&
+             (!('clientName' in data) || (data.clientName is string && data.clientName.size() <= 200)) &&
+             data.length is number && data.length > 0 &&
+             data.width is number && data.width > 0 &&
+             (!('height' in data) || data.height is number) &&
+             data.unit is string && data.unit.size() <= 20 &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000)) &&
+             (!('photoUri' in data) || data.photoUri == null || (data.photoUri is string && data.photoUri.size() <= 1000));
+    }
+
+    function isValidEstimate(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.quoteNumber is string && data.quoteNumber.size() > 0 && data.quoteNumber.size() <= 50 &&
+             data.clientName is string && data.clientName.size() > 0 && data.clientName.size() <= 200 &&
+             (!('clientContact' in data) || (data.clientContact is string && data.clientContact.size() <= 200)) &&
+             data.projectTitle is string && data.projectTitle.size() > 0 && data.projectTitle.size() <= 200 &&
+             (!('linkedMeasurementId' in data) || data.linkedMeasurementId == null || (data.linkedMeasurementId is string && data.linkedMeasurementId.size() <= 128)) &&
+             (!('taxRatePercent' in data) || data.taxRatePercent is number) &&
+             (!('markupPercent' in data) || data.markupPercent is number) &&
+             (!('discountPercent' in data) || data.discountPercent is number) &&
+             data.status is string && data.status.size() <= 50 &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000));
+    }
+
+    function isValidCatalogItem(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.sku is string && data.sku.size() > 0 && data.sku.size() <= 50 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 50)) &&
+             data.unitPrice is number &&
+             data.unit is string && data.unit.size() <= 50 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+             (!('inStock' in data) || data.inStock is bool);
+    }
+
+    function isValidUserProfile(data) {
+      return data.businessName is string && data.businessName.size() > 0 && data.businessName.size() <= 200 &&
+             (!('businessTagline' in data) || (data.businessTagline is string && data.businessTagline.size() <= 300)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 50)) &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 150)) &&
+             (!('address' in data) || (data.address is string && data.address.size() <= 300)) &&
+             data.currencySymbol is string && data.currencySymbol.size() <= 10 &&
+             (!('defaultUnit' in data) || (data.defaultUnit is string && data.defaultUnit.size() <= 20)) &&
+             (!('defaultTaxRate' in data) || data.defaultTaxRate is number) &&
+             (!('defaultMarkupRate' in data) || data.defaultMarkupRate is number) &&
+             (!('dailyVisitorTarget' in data) || data.dailyVisitorTarget is int);
+    }
+
+    // User Data Collections
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+
+      // Visitors
+      match /visitors/{visitorId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(visitorId) &&
+                         isValidVisitor(incoming()) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+        allow update: if isOwner(userId) && isValidId(visitorId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidVisitor(incoming());
+        allow delete: if isOwner(userId) && isValidId(visitorId);
+      }
+
+      // Measurements
+      match /measurements/{measurementId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(measurementId) &&
+                         isValidMeasurement(incoming()) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+        allow update: if isOwner(userId) && isValidId(measurementId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidMeasurement(incoming());
+        allow delete: if isOwner(userId) && isValidId(measurementId);
+      }
+
+      // Estimates
+      match /estimates/{estimateId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(estimateId) &&
+                         isValidEstimate(incoming()) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+        allow update: if isOwner(userId) && isValidId(estimateId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidEstimate(incoming());
+        allow delete: if isOwner(userId) && isValidId(estimateId);
+      }
+
+      // Catalog
+      match /catalog/{catalogId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(catalogId) &&
+                         isValidCatalogItem(incoming()) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+        allow update: if isOwner(userId) && isValidId(catalogId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidCatalogItem(incoming());
+        allow delete: if isOwner(userId) && isValidId(catalogId);
+      }
+
+      // Settings Profile
+      match /profile/settings {
+        allow get: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidUserProfile(incoming());
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

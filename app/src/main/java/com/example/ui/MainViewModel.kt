@@ -1,12 +1,11 @@
 package com.example.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.data.model.*
 import com.example.data.repository.AppRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 enum class AppTab(val title: String) {
     DASHBOARD("Dashboard"),
@@ -18,21 +17,72 @@ enum class AppTab(val title: String) {
     SETTINGS("Menu & Settings")
 }
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
-    val repository = AppRepository(application.applicationContext)
+class MainViewModel(
+    val repository: AppRepository,
+    val currentUserId: String
+) : ViewModel() {
 
-    val visitors = repository.visitors
-    val measurements = repository.measurements
-    val estimates = repository.estimates
-    val catalog = repository.catalog
-    val gallery = repository.gallery
-    val settings = repository.settings
-    val quickVisitorCount = repository.quickVisitorCount
+    init {
+        viewModelScope.launch {
+            repository.seedInitialDataIfEmpty(currentUserId)
+        }
+    }
+
+    val visitors: StateFlow<List<Visitor>> = repository.observeVisitors(currentUserId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
+    val measurements: StateFlow<List<Measurement>> = repository.observeMeasurements(currentUserId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
+    val estimates: StateFlow<List<Estimate>> = repository.observeEstimates(currentUserId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
+    val catalog: StateFlow<List<CatalogItem>> = repository.observeCatalog(currentUserId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
+    val settings: StateFlow<AppSettings> = repository.observeSettings(currentUserId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), AppSettings())
+
+    private val _gallery = MutableStateFlow<List<GalleryPhoto>>(
+        listOf(
+            GalleryPhoto(
+                title = "Vance Global Expo 20x20 Booth",
+                category = PhotoCategory.EXPO_BOOTH,
+                clientName = "Vance Global Logistics",
+                vectorIconName = "trade_show",
+                description = "Modern island booth with custom overhead branding and live product demo stations."
+            ),
+            GalleryPhoto(
+                title = "Nexus BioTech Lobby Facade",
+                category = PhotoCategory.INSTALLATION,
+                clientName = "Nexus BioTech Labs",
+                vectorIconName = "architecture",
+                description = "Brushed stainless steel illuminated sign and integrated digital directory."
+            ),
+            GalleryPhoto(
+                title = "Trade Center Flooring Survey",
+                category = PhotoCategory.SITE_SURVEY,
+                clientName = "Chen Architecture & Design",
+                vectorIconName = "square_foot",
+                description = "Precise laser measurements of showroom floor before tile installation."
+            ),
+            GalleryPhoto(
+                title = "Product Launch Backdrop & Banners",
+                category = PhotoCategory.MARKETING,
+                clientName = "Miller Retail Outlets",
+                vectorIconName = "campaign",
+                description = "High resolution matte step-and-repeat media wall for VIP press event."
+            )
+        )
+    )
+    val gallery: StateFlow<List<GalleryPhoto>> = _gallery.asStateFlow()
+
+    private val _quickVisitorCount = MutableStateFlow(24)
+    val quickVisitorCount: StateFlow<Int> = _quickVisitorCount.asStateFlow()
 
     private val _currentTab = MutableStateFlow(AppTab.DASHBOARD)
     val currentTab: StateFlow<AppTab> = _currentTab.asStateFlow()
 
-    // Deep-link / pre-fill states between screens
     private val _prefilledMeasurementId = MutableStateFlow<String?>(null)
     val prefilledMeasurementId: StateFlow<String?> = _prefilledMeasurementId.asStateFlow()
 
@@ -43,90 +93,132 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _currentTab.value = tab
     }
 
-    // Quick tally footfall
     fun incrementVisitorCount() {
-        repository.incrementQuickVisitorCount()
+        _quickVisitorCount.value = _quickVisitorCount.value + 1
     }
 
     // Visitor actions
     fun addVisitor(visitor: Visitor) {
-        repository.addVisitor(visitor)
+        viewModelScope.launch {
+            repository.addVisitor(visitor)
+            incrementVisitorCount()
+        }
     }
 
     fun updateVisitor(visitor: Visitor) {
-        repository.updateVisitor(visitor)
+        viewModelScope.launch {
+            repository.updateVisitor(visitor)
+        }
     }
 
     fun deleteVisitor(id: String) {
-        repository.deleteVisitor(id)
+        viewModelScope.launch {
+            repository.deleteVisitor(id)
+        }
     }
 
     // Measurement actions
     fun addMeasurement(measurement: Measurement) {
-        repository.addMeasurement(measurement)
-    }
-
-    fun updateMeasurement(measurement: Measurement) {
-        repository.updateMeasurement(measurement)
+        viewModelScope.launch {
+            repository.addMeasurement(measurement)
+        }
     }
 
     fun deleteMeasurement(id: String) {
-        repository.deleteMeasurement(id)
+        viewModelScope.launch {
+            repository.deleteMeasurement(id)
+        }
     }
 
     // Estimate actions
     fun addEstimate(estimate: Estimate) {
-        repository.addEstimate(estimate)
-    }
-
-    fun updateEstimate(estimate: Estimate) {
-        repository.updateEstimate(estimate)
+        viewModelScope.launch {
+            repository.addEstimate(estimate)
+        }
     }
 
     fun updateEstimateStatus(id: String, status: EstimateStatus) {
-        repository.updateEstimateStatus(id, status)
+        viewModelScope.launch {
+            repository.updateEstimateStatus(id, status)
+        }
     }
 
     fun deleteEstimate(id: String) {
-        repository.deleteEstimate(id)
+        viewModelScope.launch {
+            repository.deleteEstimate(id)
+        }
     }
 
     // Catalog actions
     fun addCatalogItem(item: CatalogItem) {
-        repository.addCatalogItem(item)
-    }
-
-    fun updateCatalogItem(item: CatalogItem) {
-        repository.updateCatalogItem(item)
+        viewModelScope.launch {
+            repository.addCatalogItem(item)
+        }
     }
 
     fun deleteCatalogItem(id: String) {
-        repository.deleteCatalogItem(id)
+        viewModelScope.launch {
+            repository.deleteCatalogItem(id)
+        }
     }
 
     // Gallery actions
     fun addPhoto(photo: GalleryPhoto) {
-        repository.addPhoto(photo)
+        _gallery.value = listOf(photo) + _gallery.value
     }
 
     fun deletePhoto(id: String) {
-        repository.deletePhoto(id)
+        _gallery.value = _gallery.value.filterNot { it.id == id }
     }
 
     // Settings actions
     fun updateSettings(newSettings: AppSettings) {
-        repository.updateSettings(newSettings)
+        viewModelScope.launch {
+            repository.updateSettings(newSettings)
+        }
     }
 
     fun resetToSampleData() {
-        repository.resetToSampleData()
+        viewModelScope.launch {
+            repository.seedInitialDataIfEmpty(currentUserId)
+        }
     }
 
     fun getSummaryReport(): String {
-        return repository.generateBusinessSummaryReport()
+        val s = settings.value
+        val sb = StringBuilder()
+        sb.append("📊 ${s.businessName.uppercase(java.util.Locale.US)} - BUSINESS SUMMARY REPORT\n")
+        sb.append("${s.businessTagline}\n")
+        sb.append("Contact: ${s.phone} | ${s.email}\n")
+        sb.append("=========================================\n\n")
+
+        sb.append("1. MARKETING & VISITOR MEASUREMENT:\n")
+        sb.append("• Quick Footfall Count: ${_quickVisitorCount.value} / ${s.dailyVisitorTarget} target\n")
+        sb.append("• Registered Leads: ${visitors.value.size}\n")
+        val hotCount = visitors.value.count { it.interestLevel == InterestLevel.HOT }
+        val closedCount = visitors.value.count { it.status == LeadStatus.CONVERTED }
+        sb.append("• High-Intent (Hot) Leads: $hotCount\n")
+        sb.append("• Converted Clients: $closedCount\n\n")
+
+        sb.append("2. ESTIMATES & QUOTES PIPELINE:\n")
+        sb.append("• Total Estimates Created: ${estimates.value.size}\n")
+        val totalPipeline = estimates.value.sumOf { it.grandTotal }
+        val wonPipeline = estimates.value.filter { it.status == EstimateStatus.ACCEPTED || it.status == EstimateStatus.COMPLETED }.sumOf { it.grandTotal }
+        sb.append("• Total Pipeline Value: ${s.currencySymbol}${String.format(java.util.Locale.US, "%.2f", totalPipeline)}\n")
+        sb.append("• Accepted / Won Revenue: ${s.currencySymbol}${String.format(java.util.Locale.US, "%.2f", wonPipeline)}\n\n")
+
+        sb.append("3. SITE MEASUREMENTS RECORDED:\n")
+        sb.append("• Total Areas Surveyed: ${measurements.value.size}\n")
+        val totalArea = measurements.value.sumOf { it.floorArea }
+        sb.append("• Total Area Measured: ${String.format(java.util.Locale.US, "%.1f", totalArea)} ${s.defaultUnit.areaLabel}\n\n")
+
+        sb.append("4. CATALOG & PORTFOLIO:\n")
+        sb.append("• Active Catalog Offerings: ${catalog.value.size}\n")
+        sb.append("• Portfolio Showcase Photos: ${_gallery.value.size}\n")
+
+        return sb.toString()
     }
 
-    // Workflow navigators
     fun startEstimateForVisitor(visitor: Visitor) {
         _prefilledVisitorName.value = visitor.name
         _currentTab.value = AppTab.ESTIMATES

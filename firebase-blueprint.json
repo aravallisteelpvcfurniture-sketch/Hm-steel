@@ -1,0 +1,122 @@
+{
+  "entities": {
+    "Visitor": {
+      "title": "Visitor",
+      "description": "Visitor and marketing lead record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "company": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "source": { "type": "string" },
+        "interestLevel": { "type": "string" },
+        "status": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "createdAt"]
+    },
+    "Measurement": {
+      "title": "Measurement",
+      "description": "Site blueprint and dimensions log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "locationName": { "type": "string" },
+        "clientName": { "type": "string" },
+        "length": { "type": "number" },
+        "width": { "type": "number" },
+        "height": { "type": "number" },
+        "unit": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "locationName", "length", "width", "unit", "createdAt"]
+    },
+    "Estimate": {
+      "title": "Estimate",
+      "description": "Commercial proposal and quote estimate",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "quoteNumber": { "type": "string" },
+        "clientName": { "type": "string" },
+        "clientContact": { "type": "string" },
+        "projectTitle": { "type": "string" },
+        "linkedMeasurementId": { "type": "string" },
+        "taxRatePercent": { "type": "number" },
+        "markupPercent": { "type": "number" },
+        "discountPercent": { "type": "number" },
+        "status": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "quoteNumber", "clientName", "projectTitle", "status", "createdAt"]
+    },
+    "CatalogItem": {
+      "title": "CatalogItem",
+      "description": "Product or service offering item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sku": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "unitPrice": { "type": "number" },
+        "unit": { "type": "string" },
+        "description": { "type": "string" },
+        "inStock": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "sku", "title", "unitPrice", "unit", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User business profile and preferences",
+      "type": "object",
+      "properties": {
+        "businessName": { "type": "string" },
+        "businessTagline": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "currencySymbol": { "type": "string" },
+        "defaultUnit": { "type": "string" },
+        "defaultTaxRate": { "type": "number" },
+        "defaultMarkupRate": { "type": "number" },
+        "dailyVisitorTarget": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["businessName", "currencySymbol", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/visitors/{visitorId}": {
+      "schema": "Visitor",
+      "description": "User logged marketing visitors and inquiries"
+    },
+    "/users/{userId}/measurements/{measurementId}": {
+      "schema": "Measurement",
+      "description": "User site survey measurements"
+    },
+    "/users/{userId}/estimates/{estimateId}": {
+      "schema": "Estimate",
+      "description": "User cost estimates and quotations"
+    },
+    "/users/{userId}/catalog/{catalogId}": {
+      "schema": "CatalogItem",
+      "description": "User product and service catalog items"
+    },
+    "/users/{userId}/profile/settings": {
+      "schema": "UserProfile",
+      "description": "User business settings and preferences"
+    }
+  }
+}

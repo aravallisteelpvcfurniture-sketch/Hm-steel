@@ -1,9 +1,12 @@
 package com.example.data.model
 
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.IgnoreExtraProperties
+import com.google.firebase.firestore.ServerTimestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.UUID
 
 enum class EstimateStatus(val label: String) {
     DRAFT("Draft"),
@@ -13,33 +16,71 @@ enum class EstimateStatus(val label: String) {
     COMPLETED("Fulfilled & Paid")
 }
 
+@IgnoreExtraProperties
 data class EstimateItem(
-    val id: String = UUID.randomUUID().toString(),
-    val title: String,
-    val category: String = "Materials", // Materials, Labor, Marketing, Equipment, Printing
+    val id: String = "",
+    val title: String = "",
+    val category: String = "Materials",
     val quantity: Double = 1.0,
-    val unit: String = "units", // sq ft, hrs, units, pcs
+    val unit: String = "units",
     val unitPrice: Double = 0.0
 ) {
     val total: Double
         get() = quantity * unitPrice
 }
 
+@IgnoreExtraProperties
 data class Estimate(
-    val id: String = UUID.randomUUID().toString(),
-    val quoteNumber: String = "EST-" + (1000 + (System.currentTimeMillis() % 9000)),
-    val clientName: String,
+    @DocumentId val id: String = "",
+    val quoteNumber: String = "",
+    val clientName: String = "",
     val clientContact: String = "",
-    val projectTitle: String,
+    val projectTitle: String = "",
     val linkedMeasurementId: String? = null,
     val items: List<EstimateItem> = emptyList(),
     val taxRatePercent: Double = 8.5,
     val markupPercent: Double = 15.0,
     val discountPercent: Double = 0.0,
-    val status: EstimateStatus = EstimateStatus.DRAFT,
+    val statusName: String = EstimateStatus.DRAFT.name,
     val notes: String = "Thank you for considering our proposal. Valid for 30 days.",
-    val timestamp: Long = System.currentTimeMillis()
+    @ServerTimestamp val createdAt: Timestamp? = null,
+    @ServerTimestamp val updatedAt: Timestamp? = null
 ) {
+    constructor(
+        id: String = "",
+        quoteNumber: String = "",
+        clientName: String = "",
+        clientContact: String = "",
+        projectTitle: String = "",
+        linkedMeasurementId: String? = null,
+        items: List<EstimateItem> = emptyList(),
+        taxRatePercent: Double = 8.5,
+        markupPercent: Double = 15.0,
+        discountPercent: Double = 0.0,
+        status: EstimateStatus = EstimateStatus.DRAFT,
+        notes: String = "Thank you for considering our proposal. Valid for 30 days.",
+        createdAt: Timestamp? = null,
+        updatedAt: Timestamp? = null
+    ) : this(
+        id = id,
+        quoteNumber = quoteNumber,
+        clientName = clientName,
+        clientContact = clientContact,
+        projectTitle = projectTitle,
+        linkedMeasurementId = linkedMeasurementId,
+        items = items,
+        taxRatePercent = taxRatePercent,
+        markupPercent = markupPercent,
+        discountPercent = discountPercent,
+        statusName = status.name,
+        notes = notes,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+    val status: EstimateStatus
+        get() = runCatching { EstimateStatus.valueOf(statusName) }.getOrDefault(EstimateStatus.DRAFT)
+
     val subtotal: Double
         get() = items.sumOf { it.total }
 
@@ -57,8 +98,9 @@ data class Estimate(
 
     val formattedDate: String
         get() {
+            val date = createdAt?.toDate() ?: Date()
             val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-            return sdf.format(Date(timestamp))
+            return sdf.format(date)
         }
 
     fun toShareableText(currencySymbol: String = "$"): String {

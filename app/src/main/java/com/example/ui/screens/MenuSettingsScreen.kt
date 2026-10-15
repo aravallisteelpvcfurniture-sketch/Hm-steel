@@ -218,7 +218,7 @@ fun MenuSettingsScreen(
                             MeasurementUnit.values().forEach { u ->
                                 FilterChip(
                                     selected = settings.defaultUnit == u,
-                                    onClick = { viewModel.updateSettings(settings.copy(defaultUnit = u)) },
+                                    onClick = { viewModel.updateSettings(settings.copy(defaultUnitName = u.name)) },
                                     label = { Text(u.code, fontSize = 11.sp) }
                                 )
                             }

@@ -1,6 +1,9 @@
 package com.example.data.model
 
-import java.util.UUID
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.IgnoreExtraProperties
+import com.google.firebase.firestore.ServerTimestamp
 
 enum class CatalogCategory(val label: String) {
     SIGNAGE("Signage & Banners"),
@@ -11,14 +14,46 @@ enum class CatalogCategory(val label: String) {
     MATERIALS("Raw Materials & Fixtures")
 }
 
+@IgnoreExtraProperties
 data class CatalogItem(
-    val id: String = UUID.randomUUID().toString(),
-    val sku: String,
-    val title: String,
-    val category: CatalogCategory,
-    val unitPrice: Double,
-    val unit: String, // "sq ft", "unit", "hr", "package"
+    @DocumentId val id: String = "",
+    val sku: String = "",
+    val title: String = "",
+    val categoryName: String = CatalogCategory.SIGNAGE.name,
+    val unitPrice: Double = 0.0,
+    val unit: String = "unit",
     val description: String = "",
     val inStock: Boolean = true,
-    val tags: List<String> = emptyList()
-)
+    val tags: List<String> = emptyList(),
+    @ServerTimestamp val createdAt: Timestamp? = null,
+    @ServerTimestamp val updatedAt: Timestamp? = null
+) {
+    constructor(
+        id: String = "",
+        sku: String = "",
+        title: String = "",
+        category: CatalogCategory = CatalogCategory.SIGNAGE,
+        unitPrice: Double = 0.0,
+        unit: String = "unit",
+        description: String = "",
+        inStock: Boolean = true,
+        tags: List<String> = emptyList(),
+        createdAt: Timestamp? = null,
+        updatedAt: Timestamp? = null
+    ) : this(
+        id = id,
+        sku = sku,
+        title = title,
+        categoryName = category.name,
+        unitPrice = unitPrice,
+        unit = unit,
+        description = description,
+        inStock = inStock,
+        tags = tags,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+    val category: CatalogCategory
+        get() = runCatching { CatalogCategory.valueOf(categoryName) }.getOrDefault(CatalogCategory.SIGNAGE)
+}
